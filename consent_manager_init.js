@@ -9,6 +9,7 @@
  * {
  *   clarity: { id: "xxxxxxxxxx" },
  *   gtm: { id: "GTM-XXXXXXX" },
+ *   googleAnalytics: { id: "G-XXXXXXXXXX" },
  *   googleAds: {
  *     id: "AW-XXXXXXXXX",
  *     conversionEvents: [{ name: "ads_conversion_x", params: {} }]
@@ -76,18 +77,26 @@
       })(window, document, 'script', 'dataLayer', config.gtm.id);
     }
 
-    if (config.googleAds && config.googleAds.id) {
+    // GA4 and Google Ads both load through the same gtag.js script - only
+    // inject it once, then config() each id that's present.
+    var gtagIds = [];
+    if (config.googleAnalytics && config.googleAnalytics.id) gtagIds.push(config.googleAnalytics.id);
+    if (config.googleAds && config.googleAds.id) gtagIds.push(config.googleAds.id);
+
+    if (gtagIds.length) {
       var gtagScript = document.createElement('script');
       gtagScript.async = true;
-      gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + config.googleAds.id;
+      gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + gtagIds[0];
       document.head.appendChild(gtagScript);
 
       window.gtag('js', new Date());
-      window.gtag('config', config.googleAds.id);
+      gtagIds.forEach(function (id) { window.gtag('config', id); });
 
-      (config.googleAds.conversionEvents || []).forEach(function (evt) {
-        window.gtag('event', evt.name, evt.params || {});
-      });
+      if (config.googleAds) {
+        (config.googleAds.conversionEvents || []).forEach(function (evt) {
+          window.gtag('event', evt.name, evt.params || {});
+        });
+      }
     }
   }
 
@@ -197,9 +206,7 @@
           saveButtonText: "Save and close",
           saveButtonAccessibleLabel: "Save your cookie preferences",
           creditLinkText: "Get this banner for free",
-          creditLinkAccessibleLabel: "Get this banner for free",
-          toggleOffLabel: "Off",
-          toggleOnLabel: "On"
+          creditLinkAccessibleLabel: "Get this banner for free"
         },
         icon: {
           title: "Manage your consent preferences for this site"
@@ -237,9 +244,7 @@
           saveButtonText: "Guardar y cerrar",
           saveButtonAccessibleLabel: "Guardar tus preferencias de cookies",
           creditLinkText: "Obtén este banner gratis",
-          creditLinkAccessibleLabel: "Obtén este banner gratis",
-          toggleOffLabel: "Desactivado",
-          toggleOnLabel: "Activado"
+          creditLinkAccessibleLabel: "Obtén este banner gratis"
         },
         icon: {
           title: "Administra tus preferencias de consentimiento para este sitio"
@@ -277,9 +282,7 @@
           saveButtonText: "保存して閉じる",
           saveButtonAccessibleLabel: "クッキー設定を保存する",
           creditLinkText: "このバナーを無料で入手",
-          creditLinkAccessibleLabel: "このバナーを無料で入手",
-          toggleOffLabel: "オフ",
-          toggleOnLabel: "オン"
+          creditLinkAccessibleLabel: "このバナーを無料で入手"
         },
         icon: {
           title: "このサイトの同意設定を管理する"
