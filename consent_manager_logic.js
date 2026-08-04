@@ -889,7 +889,7 @@ class SilktideConsentManager {
     // Reject button
     const rejectNonEssentialButtonText = this.config.text?.prompt?.rejectNonEssentialButtonText || 'Reject non-essential';
     const rejectNonEssentialButtonLabel = this.config.text?.prompt?.rejectNonEssentialButtonAccessibleLabel;
-    const rejectNonEssentialButton = `<button class="stcm-reject-all stcm-button stcm-button-primary"${
+    const rejectNonEssentialButton = `<button class="stcm-reject-all stcm-button stcm-button-secondary"${
       rejectNonEssentialButtonLabel && rejectNonEssentialButtonLabel !== rejectNonEssentialButtonText
         ? ` aria-label="${rejectNonEssentialButtonLabel}"`
         : ''
@@ -1013,10 +1013,6 @@ class SilktideConsentManager {
     const consentTypes = this.config.consentTypes || [];
     const acceptedConsentMap = this.getAcceptedConsents();
 
-    // Toggle switch labels
-    const toggleOffLabel = this.config.text?.preferences?.toggleOffLabel || 'Off';
-    const toggleOnLabel = this.config.text?.preferences?.toggleOnLabel || 'On';
-
     // Save button
     const saveButtonText = this.config.text?.preferences?.saveButtonText || 'Save and close';
     const saveButtonLabel = this.config.text?.preferences?.saveButtonAccessibleLabel;
@@ -1026,10 +1022,19 @@ class SilktideConsentManager {
         : ''
     }>${saveButtonText}</button>`;
 
+    // Accept all button
+    const acceptAllButtonText = this.config.text?.prompt?.acceptAllButtonText || 'Accept all';
+    const acceptAllButtonLabel = this.config.text?.prompt?.acceptAllButtonAccessibleLabel;
+    const acceptAllButton = `<button class="stcm-modal-accept-all stcm-button stcm-button-primary"${
+      acceptAllButtonLabel && acceptAllButtonLabel !== acceptAllButtonText
+        ? ` aria-label="${acceptAllButtonLabel}"`
+        : ''
+    }>${acceptAllButtonText}</button>`;
+
     // Reject button
     const rejectNonEssentialButtonText = this.config.text?.prompt?.rejectNonEssentialButtonText || 'Reject non-essential';
     const rejectNonEssentialButtonLabel = this.config.text?.prompt?.rejectNonEssentialButtonAccessibleLabel;
-    const rejectNonEssentialButton = `<button class="stcm-modal-reject-all stcm-button stcm-button-primary"${
+    const rejectNonEssentialButton = `<button class="stcm-modal-reject-all stcm-button stcm-button-secondary"${
       rejectNonEssentialButtonLabel && rejectNonEssentialButtonLabel !== rejectNonEssentialButtonText
         ? ` aria-label="${rejectNonEssentialButtonLabel}"`
         : ''
@@ -1068,8 +1073,8 @@ class SilktideConsentManager {
             } />
                   <span class="stcm-toggle-track" aria-hidden="true"></span>
                   <span class="stcm-toggle-thumb" aria-hidden="true"></span>
-                  <span class="stcm-toggle-off" aria-hidden="true">${toggleOffLabel}</span>
-                  <span class="stcm-toggle-on" aria-hidden="true">${toggleOnLabel}</span>
+                  <span class="stcm-toggle-off" aria-hidden="true">Off</span>
+                  <span class="stcm-toggle-on" aria-hidden="true">On</span>
                 </label>
               </div>
             </fieldset>
@@ -1079,6 +1084,7 @@ class SilktideConsentManager {
       </section>
       <footer>
         ${saveButton}
+        ${acceptAllButton}
         ${rejectNonEssentialButton}
       </footer>
     `;
@@ -1286,6 +1292,7 @@ class SilktideConsentManager {
     if (this.preferences) {
       const closeButton = this.preferences.querySelector('.stcm-modal-close');
       const saveButton = this.preferences.querySelector('.stcm-modal-save');
+      const acceptAllButton = this.preferences.querySelector('.stcm-modal-accept-all');
       const rejectAllButton = this.preferences.querySelector('.stcm-modal-reject-all');
 
       // Close button - only closes modal, doesn't save or fire events
@@ -1313,6 +1320,35 @@ class SilktideConsentManager {
         });
 
         // Use batch update to set all consents at once (only fires if changes detected)
+        this.batchUpdateConsents(consentStates);
+
+        // Close modal and show icon
+        this.toggleModal(false);
+        this.hideBackdrop();
+        this.removeBanner();
+        this.showCookieIcon();
+      });
+
+      // Accept All button - sets every consent type to true, then batch updates
+      acceptAllButton?.addEventListener('click', () => {
+        // We set that an initial choice was made
+        this.setHasConsented();
+
+        // First, update the checkbox UI to reflect acceptance
+        const preferencesSection = this.preferences.querySelector('#stcm-form');
+        const checkboxes = preferencesSection.querySelectorAll('input[type="checkbox"]');
+
+        checkboxes.forEach(checkbox => {
+          checkbox.checked = true;
+        });
+
+        // Build consent states: everything true
+        const consentStates = {};
+        this.config.consentTypes.forEach((type) => {
+          consentStates[type.id] = true;
+        });
+
+        // Use batch update to set all consents at once
         this.batchUpdateConsents(consentStates);
 
         // Close modal and show icon
