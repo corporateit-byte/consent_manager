@@ -14,6 +14,7 @@
  *     id: "AW-XXXXXXXXX",
  *     conversionEvents: [{ name: "ads_conversion_x", params: {} }]
  *   },
+ *   cookiePolicyUrl: "https://site.com/cookie-policy", // optional - omit to hide the link
  *   lang: { default: "en_US" },              // used if frontend_lang cookie is missing/unrecognized
  *   restrictedCountries: ["AT", "BE", ...],   // optional override of the EEA/UK/CH default list
  *   icon: { position: "bottomLeft" },
@@ -193,6 +194,7 @@
       text: {
         prompt: {
           description: "<p>We use cookies on our site to enhance your user experience, provide personalized content, and analyze our traffic.</p>",
+          cookiePolicyLinkText: "Cookie policy",
           acceptAllButtonText: "Accept all",
           acceptAllButtonAccessibleLabel: "Accept all cookies",
           rejectNonEssentialButtonText: "Reject non-essential",
@@ -231,6 +233,7 @@
       text: {
         prompt: {
           description: "<p>Utilizamos cookies en nuestro sitio para mejorar tu experiencia de usuario, ofrecer contenido personalizado y analizar nuestro tráfico.</p>",
+          cookiePolicyLinkText: "Política de cookies",
           acceptAllButtonText: "Aceptar todas",
           acceptAllButtonAccessibleLabel: "Aceptar todas las cookies",
           rejectNonEssentialButtonText: "Rechazar no esenciales",
@@ -269,6 +272,7 @@
       text: {
         prompt: {
           description: "<p>当サイトでは、ユーザー体験の向上、パーソナライズされたコンテンツの提供、トラフィックの分析のためにクッキーを使用しています。</p>",
+          cookiePolicyLinkText: "クッキーポリシー",
           acceptAllButtonText: "すべて同意する",
           acceptAllButtonAccessibleLabel: "すべてのクッキーに同意する",
           rejectNonEssentialButtonText: "必須以外を拒否",
@@ -321,6 +325,19 @@
     }
   };
 
+  // Appends the "Cookie policy" link to the prompt description, using the
+  // site-configured URL. No-op (link omitted) if the site didn't set one.
+  function buildPromptText(promptText) {
+    if (!config.cookiePolicyUrl) return promptText;
+
+    var link = ' <a href="' + config.cookiePolicyUrl + '" target="_blank" rel="noopener">' +
+      promptText.cookiePolicyLinkText + '</a>';
+
+    return Object.assign({}, promptText, {
+      description: promptText.description.replace(/<\/p>\s*$/, link + '</p>')
+    });
+  }
+
   function startConsentManager(isRestrictedCountry) {
     var selected = TRANSLATIONS[resolveLang()];
 
@@ -332,6 +349,10 @@
       return Object.assign({ id: id }, behavior, selected.consentTypes[id]);
     });
 
+    var text = Object.assign({}, selected.text, {
+      prompt: buildPromptText(selected.text.prompt)
+    });
+
     window.silktideConsentManager.init({
       backdrop: { show: false },
       icon: { position: (config.icon && config.icon.position) || "bottomLeft" },
@@ -341,7 +362,7 @@
       // banner is still always shown for the user to confirm or reject.
       preselectDefaults: true,
       consentTypes: consentTypes,
-      text: selected.text
+      text: text
     });
   }
 
