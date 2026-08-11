@@ -330,7 +330,7 @@
   function buildPromptText(promptText) {
     if (!config.cookiePolicyUrl) return promptText;
 
-    var link = ' <a href="' + config.cookiePolicyUrl + '" target="_blank" rel="noopener">' +
+    var link = ' <a href="' + config.cookiePolicyUrl + '"aria-label="Check our cookie policy" target="_blank" rel="noopener">' +
       promptText.cookiePolicyLinkText + '</a>';
 
     return Object.assign({}, promptText, {
