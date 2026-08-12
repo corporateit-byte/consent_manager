@@ -1042,7 +1042,7 @@ class SilktideConsentManager {
 
     const modalContent = `
       <header>
-        <h1>${preferencesTitle}</h1>
+        <div class="stcm-modal-title" role="heading" aria-level="2">${preferencesTitle}</div>
         ${closeModalButton}
       </header>
       ${preferencesDescription}
